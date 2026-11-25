@@ -514,6 +514,7 @@ impl PureDub {
         ui.separator();
         ui.label("Track starts · editable m:ss.sss · select a row to audition its cut");
         let mut remove = None;
+        let title_width = (ui.available_width() - 400.0).clamp(140.0, 500.0);
         egui::ScrollArea::vertical()
             .id_salt("tracks")
             .max_height((ui.available_height() - 105.0).max(120.0))
@@ -545,10 +546,9 @@ impl PureDub {
                                         ui.selectable_value(&mut t.side, side.into(), side);
                                     }
                                 });
-                            ui.add(
-                                egui::TextEdit::singleline(&mut t.title).desired_width(
-                                    (ui.available_width() - 230.0).clamp(130.0, 350.0),
-                                ),
+                            ui.add_sized(
+                                [title_width, 28.0],
+                                egui::TextEdit::singleline(&mut t.title),
                             );
                             let mut seconds = t.length_ms.unwrap_or(0) as f64 / 1000.0;
                             if ui
@@ -566,7 +566,7 @@ impl PureDub {
                                     None
                                 };
                             }
-                            ui.add(egui::TextEdit::singleline(&mut t.start).desired_width(90.0));
+                            ui.add_sized([105.0, 28.0], egui::TextEdit::singleline(&mut t.start));
                             if ui.small_button("Remove").clicked() {
                                 remove = Some(i);
                             }
