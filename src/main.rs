@@ -1,5 +1,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-mod audio;
+use puredub_core as audio;
 mod metadata;
 
 use audio::{Audio, Project, Track, parse_time, time};
@@ -88,15 +88,13 @@ impl PureDub {
             } else {
                 match std::fs::read(&path)
                     .map_err(|e| e.to_string())
-                    .and_then(|bytes| {
-                        serde_json::from_slice::<Project>(&bytes).map_err(|e| e.to_string())
-                    }) {
-                    Ok(project) if project.version == 1 => {
+                    .and_then(|bytes| Project::from_json(&bytes))
+                {
+                    Ok(project) => {
                         let source = project.source.clone();
                         app.project = project;
                         app.import(source.into());
                     }
-                    Ok(_) => app.message(Err("Unsupported project version.".into())),
                     Err(e) => app.message(Err(e)),
                 }
             }
@@ -141,7 +139,7 @@ impl PureDub {
                                 self.project.end.clone()
                             };
                             self.cursor = 0.0;
-                            self.message(Ok(format!("Imported {} · {} Hz · {}-bit · {} channels · {} full-scale samples",time(a.duration()),a.spec.sample_rate,a.spec.bits_per_sample,a.spec.channels,a.clipped)));
+                            self.message(Ok(format!("Imported {} · {} Hz · {}-bit · {} channels · {} full-scale samples",time(a.duration()),a.spec().sample_rate,a.spec().bits_per_sample,a.spec().channels,a.full_scale_samples())));
                             self.audio = Some(Arc::new(a));
                         }
                         Err(e) => self.message(Err(e)),
@@ -183,17 +181,17 @@ impl PureDub {
         }
         let sink =
             rodio::Sink::try_new(&self.output.as_ref().unwrap().1).map_err(|e| e.to_string())?;
-        let ch = a.spec.channels as usize;
+        let ch = a.spec().channels as usize;
         let first = a.frame(start) * ch;
         let last = a.frame((start + seconds).min(a.duration())) * ch;
-        let scale = (1u32 << (a.spec.bits_per_sample - 1)) as f32;
-        let samples: Vec<f32> = a.samples[first..last]
+        let scale = (1u32 << (a.spec().bits_per_sample - 1)) as f32;
+        let samples: Vec<f32> = a.samples()[first..last]
             .iter()
             .map(|s| *s as f32 / scale)
             .collect();
         sink.append(rodio::buffer::SamplesBuffer::new(
-            a.spec.channels,
-            a.spec.sample_rate,
+            a.spec().channels,
+            a.spec().sample_rate,
             samples,
         ));
         self.sink = Some(sink);
@@ -204,45 +202,7 @@ impl PureDub {
     }
     fn suggest(&mut self) -> Result<String, String> {
         let a = self.audio.as_ref().ok_or("Import a WAV recording first.")?;
-        let mut expected = parse_time(&self.project.offset)?;
-        let indices: Vec<_> = self
-            .project
-            .tracks
-            .iter()
-            .enumerate()
-            .filter(|(_, t)| t.side == self.project.side)
-            .map(|(i, _)| i)
-            .collect();
-        if indices.is_empty() {
-            return Err("Assign tracks to the selected side first.".into());
-        }
-        // Validate all metadata before altering any boundaries.
-        for &i in indices.iter().take(indices.len() - 1) {
-            if self.project.tracks[i].length_ms.is_none() {
-                return Err(format!(
-                    "Track {} has no published duration. Set starts manually, or enter durations first.",
-                    i + 1
-                ));
-            }
-        }
-        let mut starts = vec![];
-        for (pos, &i) in indices.iter().enumerate() {
-            let candidate = if pos > 0 && self.quiet_snap {
-                a.nearby_quiet(expected)
-            } else {
-                expected
-            };
-            if candidate >= a.duration()
-                || starts.last().is_some_and(|previous| *previous >= candidate)
-            {
-                return Err("Expected track times exceed the recording or overlap. Check side assignments, durations and leading silence.".into());
-            }
-            starts.push(candidate);
-            expected += self.project.tracks[i].length_ms.unwrap_or(0) as f64 / 1000.0;
-        }
-        for (i, start) in indices.iter().zip(starts) {
-            self.project.tracks[*i].start = time(start);
-        }
+        self.project.suggest_starts(a, self.quiet_snap)?;
         Ok("Suggested starts are ready. Listen across each cut before exporting; the last track ends at Side end.".into())
     }
     fn files(&mut self, ui: &mut egui::Ui) {
@@ -266,12 +226,7 @@ impl PureDub {
                 .pick_file()
             {
                 let r = (|| {
-                    let p: Project =
-                        serde_json::from_slice(&std::fs::read(p).map_err(|e| e.to_string())?)
-                            .map_err(|e| e.to_string())?;
-                    if p.version != 1 {
-                        return Err("Unsupported project version.".into());
-                    }
+                    let p = Project::from_json(&std::fs::read(p).map_err(|e| e.to_string())?)?;
                     Ok(p)
                 })();
                 match r {
@@ -290,13 +245,19 @@ impl PureDub {
                 .add_filter("PureDub JSON", &["json"])
                 .save_file()
             {
-                let r = serde_json::to_vec_pretty(&self.project)
-                    .map_err(|e| e.to_string())
-                    .and_then(|b| {
-                        use std::io::Write;
-                        let mut file=std::fs::OpenOptions::new().write(true).create_new(true).open(p).map_err(|e|format!("Choose a new project filename (existing files are protected): {e}"))?;
-                        file.write_all(&b).map_err(|e|e.to_string())
-                    });
+                let r = self.project.to_json().and_then(|b| {
+                    use std::io::Write;
+                    let mut file = std::fs::OpenOptions::new()
+                        .write(true)
+                        .create_new(true)
+                        .open(p)
+                        .map_err(|e| {
+                            format!(
+                                "Choose a new project filename (existing files are protected): {e}"
+                            )
+                        })?;
+                    file.write_all(&b).map_err(|e| e.to_string())
+                });
                 self.message(r.map(|_|"Project saved. It references the original recording; keep that WAV in place.".into()));
             }
         }
@@ -411,8 +372,8 @@ impl PureDub {
                 [egui::pos2(rect.left(), mid), egui::pos2(rect.right(), mid)],
                 egui::Stroke::new(1.0_f32, Color32::from_gray(65)),
             );
-            for (i, peak) in a.peaks.iter().enumerate() {
-                let x = rect.left() + i as f32 / a.peaks.len() as f32 * rect.width();
+            for (i, peak) in a.peaks().iter().enumerate() {
+                let x = rect.left() + i as f32 / a.peaks().len() as f32 * rect.width();
                 let h = peak * rect.height() * 0.44;
                 painter.line_segment(
                     [egui::pos2(x, mid - h), egui::pos2(x, mid + h)],

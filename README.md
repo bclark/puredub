@@ -32,6 +32,13 @@ Changing A/B changes which track rows are exported, **not** which WAV is loaded.
 
 ## Build
 
+For the native Android import/edit/export preview, see
+[android/README.md](android/README.md). It includes manual editing, optional
+MusicBrainz lookup, waveform/cut previews, project save/reopen, and verified FLAC
+export through Android's document picker. Android CI builds an APK from
+`.github/workflows/android.yml`; device evidence and current limits are recorded
+in [android/VALIDATION.md](android/VALIDATION.md).
+
 Install stable Rust and the platform C/C++ build tools (MSVC on Windows; Xcode command-line tools on macOS).
 
 ```sh
@@ -51,5 +58,39 @@ Audio remains local. Only explicit release searches/lookups contact MusicBrainz 
 Import currently loads one side into RAM (24-bit PCM expands to i32). Busy work runs off the UI thread; keep the app open until it completes. No background service, telemetry or account requirement.
 
 ## Development
+
+The reusable libraries now live in independent MIT-licensed repositories:
+
+| Repository | Responsibility |
+|---|---|
+| [puredub-core](https://github.com/bclark/puredub-core) | Offline WAV analysis, project data, cut suggestions, tagged FLAC export and sample verification |
+| [release-metadata](https://github.com/bclark/release-metadata) | Common metadata types and an optional MusicBrainz adapter; other providers can implement its public trait |
+| This repository | Existing desktop interface, file dialogs, playback and conversion from provider results into editable projects |
+
+Core has no dependency on metadata services. Manual titles, durations and cut
+positions work without making a release search. The desktop app currently enables
+MusicBrainz; additional provider selection belongs to future client work. An
+Android preview is available in [android/](android/README.md), using a native
+Kotlin interface and an app-specific JNI bridge. An iOS client is not included.
+Dependencies are pinned to Git
+revisions in Cargo.toml so a normal clone can build without sibling checkouts.
+
+Run each library's documented tests in its own repository; `cargo test` here
+doesn't run dependency test suites. The Core repository includes a synthetic,
+hardware-free offline export demo. Real Scarlett capture and channel routing still
+need hardware validation.
+
+For coordinated local edits, clone the libraries beside this checkout and use
+Cargo's local patch configuration (do not commit local absolute paths):
+
+```toml
+# .cargo/config.toml
+[patch."https://github.com/bclark/puredub-core"]
+puredub-core = { path = "../puredub-core" }
+[patch."https://github.com/bclark/release-metadata"]
+release-metadata = { path = "../release-metadata" }
+```
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for ownership and the next validation steps.
 
 See [PRODUCT.md](PRODUCT.md) for product constraints, [DESIGN.md](DESIGN.md) for the workbench design and [assets/ICON.md](assets/ICON.md) for icon provenance. Contributions should include checks for sample preservation, range validation and source safety where relevant.

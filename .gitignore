@@ -4,4 +4,6 @@
 *.flac
 *.puredub.json
 .DS_Store
+/.cargo/config.toml
+/.impeccable/review/
 
