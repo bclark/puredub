@@ -78,6 +78,10 @@ budget rejection and sample-verified export. The instrumented test crosses JNI,
 edits cuts, recreates the activity and exports FLACs. No test makes MusicBrainz
 requests. Real tape/Scarlett capture is separate evidence.
 
+See [VALIDATION.md](VALIDATION.md) for actual device/build results and
+[THIRD_PARTY.md](THIRD_PARTY.md) for dependency notices. GitHub Actions builds and
+uploads the debug APK using `.github/workflows/android.yml` in the parent repo.
+
 ## Architecture and limits
 
 - `app/`: Material 3 UI, project state, Android file access, autosave, AudioTrack

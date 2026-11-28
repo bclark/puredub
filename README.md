@@ -32,6 +32,13 @@ Changing A/B changes which track rows are exported, **not** which WAV is loaded.
 
 ## Build
 
+For the native Android import/edit/export preview, see
+[android/README.md](android/README.md). It includes manual editing, optional
+MusicBrainz lookup, waveform/cut previews, project save/reopen, and verified FLAC
+export through Android's document picker. Android CI builds an APK from
+`.github/workflows/android.yml`; device evidence and current limits are recorded
+in [android/VALIDATION.md](android/VALIDATION.md).
+
 Install stable Rust and the platform C/C++ build tools (MSVC on Windows; Xcode command-line tools on macOS).
 
 ```sh

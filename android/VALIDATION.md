@@ -17,6 +17,7 @@ or Scarlett capture is claimed.
   versions, unused generated launcher resources and optional KTX style.
 - Native ARM64 ELF LOAD segments have `0x4000` (16 KB) alignment. Physical device
   validation used a 4 KB-page device, not a 16 KB-page device.
+- APK verification with `zipalign -c -P 16 -v 4` passed.
 
 ## Device evidence
 
@@ -26,6 +27,9 @@ Samsung SM-S938U (S25 Ultra), Android 17, ARM64, screen 1440 × 3120.
   synthetic stereo, set a cut at 1.250 seconds, suggest starts, recreate the
   activity, save a project, start a new project, reopen it with its display name,
   and export two sample-verified FLACs.
+- The quiet-region Switch is found by its accessible name and toggled off/on by
+  the instrumented test. The final interface review's two material fixes (that
+  label and product-platform documentation) were both scored resolved.
 - Force-stop/relaunch restored the autosaved project and cached WAV.
 - AudioTrack preview started/stopped successfully and advanced the playback cursor.
 - Android file picker imported a 24-bit, 8 kHz stereo WAV. Its original SHA-256

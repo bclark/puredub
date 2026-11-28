@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-28T17:25:07Z",
+  "title": "Design System: PureDub Android",
+  "extensions": {
+    "breakpoints": [{ "name": "navigation-rail", "value": "600dp" }]
+  },
+  "components": [],
+  "narrative": {
+    "northStar": "PureDub workbench",
+    "overview": "This app extends the established desktop identity through native Material 3 controls. Ink navy, cool text, cyan audio data and amber actions become semantic color roles with a separate light scheme. The task is importing an existing WAV, reviewing cuts and exporting FLAC; recording remains deferred.",
+    "keyCharacteristics": [
+      "Source identity stays near audio review.",
+      "Text labels explain actions and selected states.",
+      "Real waveform data supplies the signature visual."
+    ],
+    "rules": [{ "name": "The Semantic Role Rule", "body": "Resolve component colors through `MaterialTheme.colorScheme` so both schemes retain their role pairings.", "section": "colors" }],
+    "dos": [
+      "Do retain labeled native controls and the accessible slider alternative to waveform tapping.",
+      "Do keep source identity, explicit synthetic labels and export validation visible in the task hierarchy.",
+      "Do preserve the original icon: `app/src/main/res/drawable-nodpi/puredub.png` is an unchanged copy of root `assets/puredub.png`; root `assets/ICON.md` records its MIT provenance."
+    ],
+    "donts": [
+      "Don't treat suggested cuts or metadata as proven boundaries.",
+      "Don't replace the data-driven Canvas with decorative waveform imagery. No generated raster asset or Android image composition exists.",
+      "Don't claim tablet, emulator or whole-platform certification from the phone review."
+    ]
+  }
+}
