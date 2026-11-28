@@ -62,8 +62,10 @@ The reusable libraries now live in independent MIT-licensed repositories:
 
 Core has no dependency on metadata services. Manual titles, durations and cut
 positions work without making a release search. The desktop app currently enables
-MusicBrainz; additional provider selection belongs to future client work. No
-Android/iOS client or bindings are included yet. Dependencies are pinned to Git
+MusicBrainz; additional provider selection belongs to future client work. An
+Android preview is available in [android/](android/README.md), using a native
+Kotlin interface and an app-specific JNI bridge. An iOS client is not included.
+Dependencies are pinned to Git
 revisions in Cargo.toml so a normal clone can build without sibling checkouts.
 
 Run each library's documented tests in its own repository; `cargo test` here

@@ -1,11 +1,11 @@
 # Shared library architecture
 
-PureDub is now three independent repositories. This extraction reuses the existing
-desktop client; it does not add a new client, live recorder or mobile binding layer.
+PureDub uses three independent repositories. The existing desktop client and the
+Android preview in `android/` share the published Rust libraries.
 
 ```mermaid
 flowchart TB
-    App["PureDub desktop app / future platform clients"]
+    App["PureDub desktop / Android app"]
     Core["puredub-core: offline projects and audio"]
     Metadata["release-metadata: optional providers"]
     MB["MusicBrainz adapter: opt-in feature"]
@@ -44,8 +44,9 @@ exact tested Git revisions. Neither has been published to crates.io yet.
 
 Windows synthetic tests and desktop compilation are checked locally. Both library
 repositories have active GitHub Actions checks for Windows, Linux and macOS.
-Android/iOS compilation, packaging, storage,
-audio playback and binding generation remain future validation work.
+Android now has an app-specific JNI/JSON bridge, native Material 3 UI, Android
+document access and AudioTrack previews. Swift/iOS bindings remain future work.
+See [android/README.md](android/README.md) for workflows and limitations.
 
 ## Next evidence
 
@@ -55,8 +56,13 @@ actual WAV sample rate/bit depth, and test reviewed cuts and FLAC reassembly.
 Report real hardware evidence separately from the current synthetic fixtures.
 Live recording integration is still separate work.
 
-Then validate a small Android consumer before extending public APIs for mobile.
-Long high-resolution sides currently expand to `i32` in RAM; chunked processing
-and mobile background/export behavior need work before claiming mobile readiness.
-Swift/Kotlin bindings can be introduced when those clients are started, rather
-than committing to a foreign-language API without a consumer.
+The Android consumer uses the existing public Rust APIs without requiring library
+changes. Its app-specific bridge keeps native audio resident while returning only
+waveform/format metadata to Kotlin. Preview samples are bounded temporary float
+PCM; exported samples remain unchanged integers. Android document access stages
+WAVs privately, and verified FLACs are copied to a new destination folder with a
+second byte-level hash check.
+
+Long high-resolution sides still expand to `i32` in RAM. Android checks a safe
+memory budget before decoding; chunked processing and background export remain
+follow-up library/client work. There is no live recorder or iOS client yet.
