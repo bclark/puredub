@@ -2842,18 +2842,26 @@ checksum = "3d595e54a326bc53c1c197b32d295e14b169e3cfeaa8dc82b529f947fba6bcf5"
 name = "puredub"
 version = "0.1.0"
 dependencies = [
- "claxon",
  "eframe",
- "flacenc",
- "hound",
  "image",
- "lofty",
- "reqwest",
+ "puredub-core",
+ "release-metadata",
  "rfd",
  "rodio",
+ "winresource",
+]
+
+[[package]]
+name = "puredub-core"
+version = "0.1.0"
+source = "git+https://github.com/bclark/puredub-core?rev=8337b561c76106b3e1da3684da668140127cd0d3#8337b561c76106b3e1da3684da668140127cd0d3"
+dependencies = [
+ "claxon",
+ "flacenc",
+ "hound",
+ "lofty",
  "serde",
  "serde_json",
- "winresource",
 ]
 
 [[package]]
@@ -3070,6 +3078,16 @@ name = "regex-syntax"
 version = "0.8.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d902046e6a28a1e4c3cab97258a0ce11e994903f01c2d97a9447a0b3df85f4f6"
+
+[[package]]
+name = "release-metadata"
+version = "0.1.0"
+source = "git+https://github.com/bclark/release-metadata?rev=0fb57628774cbfea148a965bb2b5f3c81b3296c5#0fb57628774cbfea148a965bb2b5f3c81b3296c5"
+dependencies = [
+ "reqwest",
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "renderdoc-sys"
